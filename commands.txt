@@ -1,0 +1,15 @@
+docker exec broker kafka-topics --create --topic loadbalancer_logs --bootstrap-server localhost:9092 --partitions 10 --replication-factor 1
+ >>> Created topic loadbalancer_logs.
+
+
+docker exec -it broker kafka-topics --bootstrap-server localhost:9092 --list                                                  __consumer_offsets
+loadbalancer_logs
+server-metrics
+test-topic3
+test-topic4
+ >>> listing topics 
+
+
+docker exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic server-metrics --from-beginning 
+>>> listening to topic 
+
