@@ -13,7 +13,7 @@ spark = SparkSession.builder \
     .config("spark.sql.streaming.statefulOperator.checkCorrectness.enabled", "false") \
     .getOrCreate()
 
-# Read from Kafka (unchanged)
+# Read from Kafka
 kafka_df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "localhost:9092") \
@@ -21,7 +21,7 @@ kafka_df = spark.readStream \
     .option("startingOffsets", "earliest") \
     .load()
 
-# Parse logs (unchanged)
+# Parse logs
 parsed_df = kafka_df.select(
     regexp_extract(col("value").cast("string"), 
         r"\[([A-Za-z]{3},\s\d{1,2}\s[A-Za-z]{3}\s\d{4}\s\d{2}:\d{2}:\d{2}\sGMT)\]", 1
@@ -34,7 +34,7 @@ parsed_df = kafka_df.select(
     ).cast("integer").alias("status_code")
 )
 
-# Timestamp conversion (unchanged)
+# Timestamp conversion
 timestamp_df = parsed_df.withColumn(
     "timestamp",
     to_timestamp(col("timestamp_string"), "EEE, dd MMM yyyy HH:mm:ss z")
@@ -44,7 +44,7 @@ timestamp_df = parsed_df.withColumn(
     col("status_code").isNotNull()
 )
 
-# Categorization (unchanged)
+# Categorization
 categorized_df = timestamp_df.withColumn(
     "category",
     when(
@@ -76,14 +76,11 @@ final_counts = windowed_counts.groupBy("window").agg(
 )
 
 def write_to_csv(batch_df, batch_id):
-    # أضيف العمود اللي بيوضح رقم الـ batch
     batch_df = batch_df.withColumn("batch_id", lit(batch_id))
 
-    # اطبعي النتائج في الكونسول
     print(f"========= Batch ID: {batch_id} =========")
     batch_df.show(truncate=False)
 
-    # احفظ النتيجة في CSV
     pandas_df = batch_df.toPandas()
     csv_file_path = "output_log_summary.csv"
 
