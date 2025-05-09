@@ -1,75 +1,153 @@
-# 📊 Servers Metrics & Logs Monitoring System
+# 📈 Servers Metrics & Logs Project
 
-## 🚀 Project Overview
+## Overview
 
-We have a **cluster of 10 servers** hosting a cloud storage website where users can upload and store various types of files. In addition, there's a **load balancer** acting as the main gateway to the website.
-
-Each server and the load balancer have **agents** deployed to collect:
-
-* **Metrics** from the 10 servers (e.g., CPU, memory)
-* **Logs** from the load balancer (e.g., HTTP operations)
-
-This project involves designing a **multi-node Kafka cluster** and building a complete data pipeline to process and store the collected data.
+This project simulates a cloud storage environment with 10 servers and a load balancer, collecting system metrics and logs. A **Kafka** cluster streams the data, with two dedicated topics.
+A Python consumer stores **server metrics** into a **SQL Server database**, and a **Spark Structured Streaming** application processes **load balancer logs** to compute 5-minute operational summaries, saving results into **HDFS**.
 
 ---
 
-## 🧩 Architecture
+## Architecture
 
-### ✅ Kafka Topics
-
-* `server-metrics`: receives metrics from the 10 servers
-* `loadbalancer-logs`: receives HTTP logs from the load balancer
-
-### 📥 Data Producers
-
-A Java program simulates the agents sending data to the Kafka topics.
-
-Run it using Maven:
-
-```bash
-mvn exec:java
+```
+[Java Agent Simulator] --> [Kafka Broker]
+                                |
+           +--------------------+--------------------+
+           |                                         |
+   [Python Metrics Consumer]                 [Spark Streaming App]
+           |                                         |
+     [MSSQL Database]                         [CSV Output -> HDFS]
 ```
 
-### 🧑‍💻 Data Consumers
+---
 
-* **Metrics Consumer**:
+## Setup Instructions
 
-  * Language: Your choice (e.g., Python, Java)
-  * Reads from `server-metrics`
-  * Stores data in a **relational database** (e.g., PostgreSQL)
+### 1. Start Kafka Broker
 
-* **Logs Processor (Spark Application)**:
+Run Kafka inside Docker using **KRaft mode** (no Zookeeper).
 
-  * Consumes from `loadbalancer-logs`
-  * Calculates **moving window counts** (5 minutes) for:
+Start the Kafka broker:
 
-    * Successful GET
-    * Successful POST
-    * Failed GET
-    * Failed POST
-  * Stores the results into **HDFS**
+```bash
+docker-compose up -d
+```
 
 ---
 
-## 🛠️ Requirements
+### 2. Create Kafka Topics
 
-* Deploy a **multi-node Kafka cluster**
-* Create the following Kafka topics:
+```bash
+# Create topics using kafka-topics CLI
+kafka-topics.sh --create --topic test-topic3 --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 
-  * `server-metrics`
-  * `loadbalancer-logs`
-* Run the provided **Java producer**
-* Implement:
+kafka-topics.sh --create --topic test-topic4 --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+```
 
-  * Kafka consumer for metrics → relational DB
-  * Spark application for logs → HDFS
+* **test-topic3** → Logs from Load Balancer
+* **test-topic4** → Metrics from Servers
 
 ---
 
-## 📦 Key Deliverables
+### 3. Run Java Producer Simulator
 
-* 📝 Configuration file for each Kafka broker and topic
-* 💻 Source code for:
+```bash
+# Download dependencies and run
+mvn clean compile exec:java
+```
 
-  * Kafka metrics consumer
-  * Spark logs processor
+This simulates the 10 server agents and the load balancer agent sending data to Kafka.
+
+---
+
+### 4. Start Python Metrics Consumer
+
+**File:** `metrics_consumer.py`
+
+* Consumes from `test-topic4`.
+* Parses server metrics.
+* Batch inserts every 2 minutes (or 1000 messages) into **MSSQL** table `server_matric`.
+
+```bash
+python metrics_consumer.py
+```
+
+**Requirements:**
+
+* kafka-python
+* pandas
+* sqlalchemy
+* pyodbc
+
+---
+
+### 5. Start Spark Logs Processor
+
+**File:** `log_consumer.py`
+
+* Consumes from `test-topic3`.
+* Parses HTTP logs (GET/POST success/failure).
+* Computes 5-minute moving windows with 10-min watermark.
+* Writes aggregated results to `output_log_summary.csv`.
+
+```bash
+python log_consumer.py
+```
+
+**Requirements:**
+
+* PySpark
+* findspark
+* pandas
+* os
+
+---
+
+### 6. Upload Output to HDFS
+
+**File:** `hdfs_uploader.py`
+
+* Uploads the generated `output_log_summary.csv` file to **HDFS** every 5 minutes, overwriting the previous version.
+
+```bash
+python hdfs_uploader.py
+```
+
+**Requirements:**
+
+* hdfs
+* pandas
+
+---
+
+## Technologies Used
+
+* **Apache Kafka** (broker, topics, KRaft mode)
+* **Maven** (Java producers)
+* **Python** (kafka-python, sqlalchemy, pandas)
+* **Apache Spark Structured Streaming** (PySpark)
+* **Hadoop HDFS** (for final CSV storage)
+* **SQL Server** (Microsoft SQL Server for storing metrics)
+
+---
+
+## Design Choices
+
+* Single Kafka broker (lab simulation).
+* Use of **batching** for efficient database inserts.
+* **Watermarking** to handle late arriving logs in Spark.
+* Use of **KRaft** (no Zookeeper) for simplicity.
+* Separate consumers for metrics vs logs for scalability.
+
+---
+
+# 🚀 How to Run Everything in 5 Minutes
+
+```bash
+docker-compose up -d        # Start Kafka broker
+mvn clean compile exec:java # Start Java producer simulation
+python metrics_consumer.py  # Start metrics consumer
+python log_consumer.py      # Start Spark logs consumer
+python hdfs_uploader.py     # Start HDFS uploader
+```
+
