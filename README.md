@@ -9,15 +9,8 @@ A Python consumer stores **server metrics** into a **SQL Server database**, and 
 
 ## Architecture
 
-```
-[Java Agent Simulator] --> [Kafka Broker]
-                                |
-           +--------------------+--------------------+
-           |                                         |
-   [Python Metrics Consumer]                 [Spark Streaming App]
-           |                                         |
-     [MSSQL Database]                         [CSV Output -> HDFS]
-```
+![image](https://github.com/user-attachments/assets/084a51a4-50e5-4e3a-b624-275f44718241)
+
 
 ---
 
