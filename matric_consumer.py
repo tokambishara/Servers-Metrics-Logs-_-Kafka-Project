@@ -1,4 +1,4 @@
-from kafka import KafkaConsumer  # This now uses the correct library
+from kafka import KafkaConsumer 
 import pandas as pd
 from sqlalchemy import create_engine
 import time
