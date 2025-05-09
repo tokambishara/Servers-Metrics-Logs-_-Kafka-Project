@@ -72,6 +72,10 @@ python metrics_consumer.py
 * sqlalchemy
 * pyodbc
 
+### 📸 Output:
+![image](https://github.com/user-attachments/assets/ab8b7988-f31d-47e9-9b61-f646e7eb476e)
+![image](https://github.com/user-attachments/assets/d6a9d809-2f6a-4f71-a2bc-6a697ad4bbeb)
+
 ---
 
 ### 5. Start Spark Logs Processor
@@ -94,6 +98,9 @@ python log_consumer.py
 * pandas
 * os
 
+### 📸 Output:
+![image](https://github.com/user-attachments/assets/0dc53bda-e3c2-4fcf-b867-321dfcd034f2)
+
 ---
 
 ### 6. Upload Output to HDFS
@@ -110,6 +117,9 @@ python hdfs_uploader.py
 
 * hdfs
 * pandas
+
+### 📸 Output:
+![image](https://github.com/user-attachments/assets/edd97e28-cd7c-4efd-bd0b-b8d9d4e718ff)
 
 ---
 
