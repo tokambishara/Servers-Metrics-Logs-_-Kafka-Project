@@ -74,7 +74,7 @@ python metrics_consumer.py
 
 ### 📸 Output:
 ![image](https://github.com/user-attachments/assets/ab8b7988-f31d-47e9-9b61-f646e7eb476e)
-![image](https://github.com/user-attachments/assets/d6a9d809-2f6a-4f71-a2bc-6a697ad4bbeb)
+![image](https://github.com/user-attachments/assets/9d0434fc-87e9-45e9-8131-d833a60608c4)
 
 ---
 
